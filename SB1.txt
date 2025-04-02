@@ -1,0 +1,207 @@
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
+
+export default function SimpleBarclays() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [expectedCode] = useState("123456");
+  const [verified, setVerified] = useState(false);
+  const [balance, setBalance] = useState(3000);
+  const [transactions, setTransactions] = useState([
+    { id: 1, date: "2025-04-01", description: "Grocery Store", amount: -54.32 },
+    { id: 2, date: "2025-03-30", description: "Salary", amount: 1500.0 },
+    { id: 3, date: "2025-03-28", description: "Electric Bill", amount: -120.0 },
+  ]);
+  const [recipient, setRecipient] = useState("");
+  const [amountToSend, setAmountToSend] = useState("");
+  const [message, setMessage] = useState("");
+  const [billName, setBillName] = useState("");
+  const [billAmount, setBillAmount] = useState("");
+  const [savingsGoal, setSavingsGoal] = useState(2000);
+  const [savingsProgress, setSavingsProgress] = useState(300);
+  const [aiQuestion, setAiQuestion] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [rewardMessage, setRewardMessage] = useState("");
+
+  const handleLogin = () => {
+    if (username.trim() !== "" && password.trim() !== "") {
+      setMessage("Verification code sent to your device. Please enter it below.");
+    } else {
+      setMessage("Please enter both username and password.");
+    }
+  };
+
+  const handleVerifyCode = () => {
+    if (verificationCode === expectedCode) {
+      setLoggedIn(true);
+      setVerified(true);
+      setMessage("Login successful!");
+    } else {
+      setMessage("Incorrect verification code.");
+    }
+  };
+
+  const handleSendMoney = () => {
+    const amount = parseFloat(amountToSend);
+    if (!recipient || isNaN(amount) || amount <= 0) {
+      setMessage("Please enter a valid recipient and amount.");
+      return;
+    }
+    if (amount > balance) {
+      setMessage("Insufficient funds.");
+      return;
+    }
+    setBalance(prev => prev - amount);
+    setTransactions(prev => [
+      { id: prev.length + 1, date: new Date().toISOString().split('T')[0], description: `Sent to ${recipient}`, amount: -amount },
+      ...prev
+    ]);
+    setMessage("Transfer successful!");
+    setRecipient("");
+    setAmountToSend("");
+  };
+
+  const handlePayBill = () => {
+    const amount = parseFloat(billAmount);
+    if (!billName || isNaN(amount) || amount <= 0) {
+      setMessage("Please enter a valid bill name and amount.");
+      return;
+    }
+    if (amount > balance) {
+      setMessage("Not enough balance to pay this bill.");
+      return;
+    }
+    setBalance(prev => prev - amount);
+    setTransactions(prev => [
+      { id: prev.length + 1, date: new Date().toISOString().split('T')[0], description: `Paid ${billName}`, amount: -amount },
+      ...prev
+    ]);
+    setMessage(`Paid ${billName} successfully.`);
+    setBillName("");
+    setBillAmount("");
+  };
+
+  const addToSavings = () => {
+    const amount = 100;
+    if (amount > balance) {
+      setMessage("Insufficient funds to add to savings.");
+      return;
+    }
+    setBalance(prev => prev - amount);
+    setSavingsProgress(prev => {
+      const updated = prev + amount;
+      if (updated >= savingsGoal) {
+        setRewardMessage("🎉 You reached your savings goal! You earned the 🏆 Golden Saver Badge!");
+      }
+      return updated;
+    });
+    setMessage("$100 added to savings.");
+  };
+
+  const handleAskAI = () => {
+    if (aiQuestion.trim() === "") {
+      setAiResponse("Please enter a question.");
+    } else {
+      setAiResponse("🤖 This is a placeholder response for: " + aiQuestion);
+    }
+  };
+
+  const [searchValue, setSearchValue] = useState("");
+
+  return (
+    <main className="min-h-screen bg-white text-black p-6 grid gap-6 max-w-2xl mx-auto">
+      <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} className="text-3xl font-bold text-center">
+        Simple Barclays
+      </motion.h1>
+
+      <div className="flex justify-center">
+        <Input
+          placeholder="Search your dashboard..."
+          value={searchValue}
+          onChange={e => setSearchValue(e.target.value)}
+          className="w-full max-w-md mt-2"
+        />
+      </div>
+      <p className="text-center text-sm text-gray-500">Welcome to your simplified banking dashboard</p>
+
+      {!loggedIn && !verified ? (
+        <Card>
+          <CardContent className="space-y-4 pt-6">
+            <Input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} />
+            <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+            <Button onClick={handleLogin}>Send Verification Code</Button>
+            {message && <p className="text-blue-500">{message}</p>}
+            <Input placeholder="Enter Verification Code" value={verificationCode} onChange={e => setVerificationCode(e.target.value)} />
+            <Button onClick={handleVerifyCode}>Verify Code</Button>
+          </CardContent>
+        </Card>
+      ) : loggedIn ? (
+        <>
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-lg font-semibold">Account Balance: ${balance.toFixed(2)}</p>
+              <p className="text-green-600">{message}</p>
+              <p className="text-yellow-600">{rewardMessage}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <h2 className="text-lg font-bold">Send Money</h2>
+              <Input placeholder="Recipient" value={recipient} onChange={e => setRecipient(e.target.value)} />
+              <Input type="number" placeholder="Amount" value={amountToSend} onChange={e => setAmountToSend(e.target.value)} />
+              <Button onClick={handleSendMoney}>Send</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <h2 className="text-lg font-bold">Pay a Bill</h2>
+              <Input placeholder="Bill Name" value={billName} onChange={e => setBillName(e.target.value)} />
+              <Input type="number" placeholder="Amount" value={billAmount} onChange={e => setBillAmount(e.target.value)} />
+              <Button onClick={handlePayBill}>Pay Bill</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <h2 className="text-lg font-bold">Savings Goal</h2>
+              <p>Goal: ${savingsGoal} | Current: ${savingsProgress}</p>
+              <div className="w-full bg-gray-200 rounded-full h-4">
+                <div className="bg-blue-600 h-4 rounded-full" style={{ width: `${(savingsProgress / savingsGoal) * 100}%` }} />
+              </div>
+              <Button onClick={addToSavings}>Add $100 to Savings</Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <h2 className="text-lg font-bold">AI Help Assistant</h2>
+              <Input placeholder="Ask a question..." value={aiQuestion} onChange={e => setAiQuestion(e.target.value)} />
+              <Button onClick={handleAskAI}>Ask</Button>
+              <p className="text-gray-700">{aiResponse}</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <h2 className="text-lg font-bold mb-2">Recent Transactions</h2>
+              <ul className="space-y-1">
+                {transactions.map(tx => (
+                  <li key={tx.id} className="text-sm border-b pb-1">
+                    <strong>{tx.date}</strong> — {tx.description} — <span className={tx.amount < 0 ? "text-red-500" : "text-green-600"}>${Math.abs(tx.amount).toFixed(2)}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </>
+      ) : null}
+    </main>
+  );
+}
